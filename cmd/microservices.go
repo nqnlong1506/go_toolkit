@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"os/exec"
 	"strings"
 	"sync"
 
@@ -95,6 +96,47 @@ microservices must be run inside of a go module (please run "go mod init <MODNAM
 
 		wg.Wait()
 		fmt.Println("Microservices structure initialized successfully.")
+
+		usernameCmd := exec.Command("git", "config", "user.name")
+		usernameOutput, err := usernameCmd.CombinedOutput()
+		if err != nil {
+			fmt.Println("Error getting git username:", err)
+			fmt.Println("Enter username: ")
+		} else {
+			fmt.Printf("Enter username (default: %s): ", string(usernameOutput))
+		}
+		var username string
+		fmt.Scanln(&username)
+		if strings.TrimSpace(username) == "" {
+			username = strings.TrimSpace(string(usernameOutput))
+		}
+
+		var projectName string
+		fmt.Printf("Enter project name: ")
+		fmt.Scanln(&projectName)
+		for {
+			if strings.TrimSpace(projectName) != "" {
+				break
+			}
+
+			fmt.Println("Project name cannot be empty. Please enter a valid project name: ")
+			fmt.Scanln(&projectName)
+		}
+
+		moduleName := fmt.Sprintf("github.com/%s/%s", username, projectName)
+		fmt.Printf("Enter module name (default: %s): ", moduleName)
+		fmt.Scanln(&moduleName)
+
+		cmdInit := exec.Command("go", "mod", "init", moduleName)
+		cmdInit.Stdout = os.Stdout
+		cmdInit.Stderr = os.Stderr
+		err = cmdInit.Run()
+		if err != nil {
+			fmt.Println("Error initializing go module:", err)
+			return
+		}
+
+		fmt.Printf("Go module initialized with name: %s\n", moduleName)
 	},
 }
 
