@@ -1,2 +1,2 @@
 build:
-	go build -o toolkit
+	go build -o lio-toolkit && sudo cp lio-toolkit /usr/local/bin/
